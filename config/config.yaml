@@ -1,0 +1,29 @@
+# Hermes Assistant — hardened config (mounted into HERMES_HOME on first boot)
+# Copy to ~/.hermes-assistant/config.yaml via bootstrap.sh
+# Venice block matches website/docs/integrations/providers.md (custom_providers recipe).
+
+terminal:
+  backend: local
+  cwd: /opt/data/workspace
+  timeout: 180
+  lifetime_seconds: 300
+  auto_source_bashrc: false
+  shell_init_files: []
+  home_mode: profile
+  env_passthrough: []
+  docker_mount_cwd_to_workspace: false
+
+security:
+  allow_lazy_installs: false
+
+custom_providers:
+  - name: venice
+    base_url: https://api.venice.ai/api/v1
+    key_env: VENICE_API_KEY
+    api_mode: chat_completions
+    discover_models: true
+
+model:
+  provider: custom:venice
+  default: zai-org-glm-4.7-flash
+  base_url: https://api.venice.ai/api/v1
