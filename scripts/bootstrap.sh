@@ -5,6 +5,7 @@
 set -euo pipefail
 
 ASSISTANT_ROOT="${HERMES_ASSISTANT_ROOT:-$HOME/hermes-assistant}"
+export HERMES_ASSISTANT_ROOT="$ASSISTANT_ROOT"
 HERMES_DATA="${HERMES_DATA_DIR:-$HOME/.hermes-assistant}"
 WORKSPACE="${HERMES_WORKSPACE_DIR:-$HOME/hermes-workspace}"
 BUILD_CONTEXT="${HERMES_BUILD_CONTEXT:-/home/hermes/hermes-agent}"
@@ -16,6 +17,8 @@ die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 
 # shellcheck source=container-runtime.sh
 source "$ASSISTANT_ROOT/scripts/container-runtime.sh"
+# shellcheck source=hermes-agent-pin.sh
+source "$ASSISTANT_ROOT/scripts/hermes-agent-pin.sh"
 
 export HERMES_DATA_DIR="$HERMES_DATA"
 export HERMES_WORKSPACE_DIR="$WORKSPACE"
@@ -67,6 +70,7 @@ hermes_write_compose_env "$ASSISTANT_ROOT"
 if [[ ! -f "${HERMES_BUILD_CONTEXT}/Dockerfile" ]]; then
   die "Build context missing Dockerfile at ${HERMES_BUILD_CONTEXT}. As admin run: sudo bash ${ASSISTANT_ROOT}/scripts/prepare-build-context.sh"
 fi
+hermes_check_agent_pin "${HERMES_BUILD_CONTEXT}"
 
 log ""
 log "Building and starting containers (first run may take several minutes)..."
@@ -87,7 +91,7 @@ log "  Data:      $HERMES_DATA"
 log "  Workspace: $WORKSPACE"
 log "  Allowlist: $HERMES_DATA/env.allowlist (names only — values stay in your shell)"
 log "  CLI:       hermes-assistant chat"
-log "  Dashboard: http://127.0.0.1:9119 (after gateway is healthy)"
+log "  Dashboard: http://127.0.0.1:9120 (after gateway is healthy)"
 log ""
 log "Start with keys from your shell (not .env files):"
 log "  # edit allowlist names, load keys in shell, then:"

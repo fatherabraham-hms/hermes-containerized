@@ -8,7 +8,7 @@ Wants=network-online.target
 Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=%h/hermes-assistant
-# Non-interactive: load config/env.secrets, sudo -n → run-as-hermes-privileged.sh
+# Non-interactive: load config/env.secrets, sudo -n → /usr/local/sbin/hermes-assistant-privileged.sh
 Environment=HERMES_SYSTEMD=1
 Environment=HERMES_NONINTERACTIVE=1
 Environment=HERMES_OPERATOR_KIT=%h/hermes-assistant

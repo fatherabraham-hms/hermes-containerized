@@ -1,7 +1,7 @@
 #!/bin/bash
 # Root-only half of launch-with-host-env.sh (sync kit → hermes, then runuser).
 # Installed for passwordless sudo from the operator systemd unit:
-#   bucephalus3 ALL=(root) NOPASSWD: /home/bucephalus3/hermes-assistant/scripts/run-as-hermes-privileged.sh
+#   bucephalus3 ALL=(root) NOPASSWD: /usr/local/sbin/hermes-assistant-privileged.sh
 #
 # Usage (as root):
 #   run-as-hermes-privileged.sh start|stop|restart|recreate|status|logs
@@ -84,7 +84,8 @@ if [[ -d "$OPERATOR_KIT/scripts" && -d "$TARGET_ASSISTANT" ]]; then
   for script in verify-isolation.sh run-verify.sh hermes-podman.sh fix-home-permissions.sh \
     fix-rootless-data-ownership.sh hermes-assistant-wrapper.sh hermes-assistant-cli.sh \
     export-allowlisted-env.sh container-runtime.sh launch-with-host-env.sh \
-    prepare-build-context.sh migrate-to-hermes-user.sh run-as-hermes-privileged.sh; do
+    prepare-build-context.sh migrate-to-hermes-user.sh run-as-hermes-privileged.sh \
+    hermes-agent-pin.sh update-hermes-agent-pin.sh; do
     [[ -f "${OPERATOR_KIT}/scripts/${script}" ]] || continue
     if is_admin_script "$script" || [[ "$script" == "run-as-hermes-privileged.sh" ]]; then
       install -o root -g root -m 0755 \
@@ -101,6 +102,10 @@ if [[ -d "$OPERATOR_KIT/scripts" && -d "$TARGET_ASSISTANT" ]]; then
   [[ -f "${OPERATOR_KIT}/docker-compose.yml" ]] && \
     install -o "$TARGET_USER" -g "$TARGET_USER" -m 0644 \
       "${OPERATOR_KIT}/docker-compose.yml" "${TARGET_ASSISTANT}/docker-compose.yml"
+  if [[ -f "${OPERATOR_KIT}/hermes-agent.lock" ]]; then
+    install -o "$TARGET_USER" -g "$TARGET_USER" -m 0644 \
+      "${OPERATOR_KIT}/hermes-agent.lock" "${TARGET_ASSISTANT}/hermes-agent.lock"
+  fi
   if [[ -f "$OPERATOR_ALLOWLIST" ]]; then
     mkdir -p "${TARGET_ASSISTANT}/config" "${TARGET_HOME}/.hermes-assistant"
     install -o "$TARGET_USER" -g "$TARGET_USER" -m 644 \

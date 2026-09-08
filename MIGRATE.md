@@ -24,7 +24,9 @@ journalctl --user -u hermes-assistant.service -f
 ```
 
 After reboot the operator user unit starts `launch-with-host-env.sh` →
-`run-as-hermes-privileged.sh` (passwordless sudo) → hermes wrapper.
+`/usr/local/sbin/hermes-assistant-privileged.sh` (passwordless sudo; installed by
+`install-autostart.sh` from the kit copy `scripts/run-as-hermes-privileged.sh`)
+→ hermes wrapper.
 
 Update secrets: edit `config/env.secrets`, then `systemctl --user restart hermes-assistant.service`.
 
@@ -179,7 +181,7 @@ chmod 600 /home/bucephalus3/.ssh/* 2>/dev/null || true
 | Could not read env.allowlist | Edit **`~/hermes-assistant/config/env.allowlist`** (not under mode-700 `.hermes-assistant`) |
 | Volume paths like `.../.hermes-assistant}` | podman-compose nested `${VAR:-${HOME}/...}` bug — sync fixed `docker-compose.yml`, then `launch-with-host-env.sh recreate` |
 | `cannot chdir to /home/bucephalus3/...: Permission denied` during remapping | Operator cwd was unreadable to hermes; re-run `sudo bash /home/bucephalus3/hermes-assistant/scripts/fix-home-permissions.sh` (kit now cds to `/home/hermes` before `podman unshare`) |
-| Dashboard blank / connection refused on `:9119` | Dashboard is **inside** `hermes-assistant` (s6), not a second container. Run `~/hermes-assistant/scripts/check-dashboard.sh`; confirm `HERMES_DASHBOARD=1` in `podman exec hermes-assistant env`; check `podman logs hermes-assistant` for dashboard crash; restart with `launch-with-host-env.sh restart` |
+| Dashboard blank / connection refused on `:9120` | Dashboard is **inside** `hermes-assistant` (s6), not a second container. Run `~/hermes-assistant/scripts/check-dashboard.sh`; confirm `HERMES_DASHBOARD=1` in `podman exec hermes-assistant env`; check `podman logs hermes-assistant` for dashboard crash; restart with `launch-with-host-env.sh restart` |
 | Pulling `hermes-assistant_dashboard:latest` / access denied | Stale `compose.runtime.yml` still has ghost `dashboard:` service. Sync kit + recreate: `sudo bash …/sync-to-hermes.sh` then `launch-with-host-env.sh recreate` |
 | `grep: /opt/data/config.yaml: Permission denied` in verify | File is `root:root 0600` (often from volume `:U`). Kit compose no longer uses `:U`; sync + recreate. Immediate repair: `sudo -u hermes bash -lc 'podman exec -u root hermes-assistant chown hermes:hermes /opt/data/config.yaml; podman exec -u root hermes-assistant chmod 640 /opt/data/config.yaml'` |
 | `XDG_RUNTIME_DIR ... is not owned by the current user` | Do not use `sudo -E`; use updated `launch-with-host-env.sh` |

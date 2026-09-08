@@ -31,6 +31,8 @@ cd "$ASSISTANT_ROOT"
 
 # shellcheck source=container-runtime.sh
 source "${ASSISTANT_ROOT}/scripts/container-runtime.sh"
+# shellcheck source=hermes-agent-pin.sh
+source "${ASSISTANT_ROOT}/scripts/hermes-agent-pin.sh"
 
 hermes_podman() {
   # Prefer the caller's rootless podman when the container is visible there
@@ -200,6 +202,46 @@ if grep -vE '^\s*#' "${ASSISTANT_ROOT}/docker-compose.yml" 2>/dev/null \
   FAIL=1
 else
   printf 'PASS  docker-compose.yml uses plain env vars (no nested defaults)\n'
+fi
+
+if grep -q 'HERMES_DOCKER_EXEC_AS_ROOT' "${ASSISTANT_ROOT}/scripts/hermes-assistant-cli.sh"; then
+  printf 'FAIL  CLI must not exec as root (HERMES_DOCKER_EXEC_AS_ROOT)\n'
+  FAIL=1
+else
+  printf 'PASS  CLI does not exec as root\n'
+fi
+
+if grep -vE '^\s*#' "${ASSISTANT_ROOT}/scripts/hermes-assistant-cli.sh" | grep -q -- '--user hermes'; then
+  printf 'PASS  CLI execs as --user hermes\n'
+else
+  printf 'FAIL  CLI execs as --user hermes\n'
+  FAIL=1
+fi
+
+if [[ -f "${ASSISTANT_ROOT}/hermes-agent.lock" && -f "${ASSISTANT_ROOT}/scripts/hermes-agent-pin.sh" ]]; then
+  printf 'PASS  hermes-agent.lock and pin helper present\n'
+else
+  printf 'FAIL  hermes-agent.lock and pin helper present\n'
+  FAIL=1
+fi
+
+pin_src="${HERMES_BUILD_CONTEXT:-}"
+if [[ -z "$pin_src" ]]; then
+  if [[ -f "${HOME}/0_Development/hermes-agent/Dockerfile" ]]; then
+    pin_src="${HOME}/0_Development/hermes-agent"
+  elif [[ -f "${TARGET_HOME}/hermes-agent/Dockerfile" ]]; then
+    pin_src="${TARGET_HOME}/hermes-agent"
+  fi
+fi
+if [[ -n "$pin_src" ]]; then
+  if hermes_check_agent_pin "$pin_src"; then
+    printf 'PASS  hermes-agent pin matches lock\n'
+  else
+    printf 'FAIL  hermes-agent pin matches lock\n'
+    FAIL=1
+  fi
+else
+  printf 'PASS  hermes-agent pin (no local checkout to check)\n'
 fi
 
 echo ""

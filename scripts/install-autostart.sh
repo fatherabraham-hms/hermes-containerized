@@ -7,7 +7,7 @@
 #
 # This will:
 #   - create config/env.secrets from your current shell (allowlisted names only)
-#   - install passwordless sudo for run-as-hermes-privileged.sh
+#   - install passwordless sudo for /usr/local/sbin/hermes-assistant-privileged.sh
 #   - enable linger + systemd --user unit hermes-assistant.service
 #   - start the stack once
 
@@ -17,7 +17,8 @@ OPERATOR_USER="${HERMES_OPERATOR_USER:-bucephalus3}"
 OPERATOR_KIT="${HERMES_OPERATOR_KIT:-/home/${OPERATOR_USER}/hermes-assistant}"
 TARGET_USER="${HERMES_TARGET_USER:-hermes}"
 UNIT_SRC="${OPERATOR_KIT}/systemd/hermes-assistant.service"
-PRIVILEGED="${OPERATOR_KIT}/scripts/run-as-hermes-privileged.sh"
+KIT_PRIVILEGED="${OPERATOR_KIT}/scripts/run-as-hermes-privileged.sh"
+PRIVILEGED="${HERMES_PRIVILEGED_HELPER:-/usr/local/sbin/hermes-assistant-privileged.sh}"
 ALLOWLIST="${OPERATOR_KIT}/config/env.allowlist"
 SECRETS="${OPERATOR_KIT}/config/env.secrets"
 SUDOERS_FILE="/etc/sudoers.d/hermes-assistant"
@@ -37,15 +38,15 @@ UNIT_DST="${CALLER_HOME}/.config/systemd/user/hermes-assistant.service"
 
 [[ -d "$OPERATOR_KIT" ]] || { echo "Missing kit: $OPERATOR_KIT" >&2; exit 1; }
 [[ -f "$UNIT_SRC" ]] || { echo "Missing unit: $UNIT_SRC" >&2; exit 1; }
-[[ -f "$PRIVILEGED" ]] || { echo "Missing helper: $PRIVILEGED" >&2; exit 1; }
+[[ -f "$KIT_PRIVILEGED" ]] || { echo "Missing helper: $KIT_PRIVILEGED" >&2; exit 1; }
 [[ -f "$ALLOWLIST" ]] || { echo "Missing allowlist: $ALLOWLIST" >&2; exit 1; }
 
-chmod 0755 "$PRIVILEGED" \
+chmod 0755 "$KIT_PRIVILEGED" \
   "${OPERATOR_KIT}/scripts/launch-with-host-env.sh" \
   "${OPERATOR_KIT}/scripts/install-autostart.sh"
-# Privileged helper must stay root-owned so hermes cannot rewrite the sudo target.
-chown root:root "$PRIVILEGED"
-chmod 0755 "$PRIVILEGED"
+# Sudoers target lives in /usr/local/sbin (root:root) so a user-writable
+# scripts/ directory cannot replace the NOPASSWD binary.
+install -o root -g root -m 0755 "$KIT_PRIVILEGED" "$PRIVILEGED"
 
 # --- env.secrets: copy allowlisted values from caller's environment ---
 # shellcheck source=export-allowlisted-env.sh

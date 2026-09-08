@@ -21,8 +21,7 @@ if [[ $# -eq 0 ]]; then
   set -- chat
 fi
 
-exec $HERMES_CONTAINER_CLI exec -it \
-  -e HERMES_DOCKER_EXEC_AS_ROOT=1 \
+exec $HERMES_CONTAINER_CLI exec -it --user hermes \
   -e HERMES_HOME=/opt/data \
   -e HOME=/opt/data/home \
   -w /opt/data/workspace \

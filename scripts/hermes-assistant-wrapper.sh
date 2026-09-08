@@ -113,7 +113,7 @@ hermes_repair_data_ownership() {
 hermes_bring_up() {
   local -a up_args=(up -d --remove-orphans)
   local c="${HERMES_ASSISTANT_CONTAINER:-hermes-assistant}"
-  local dash_port="${HERMES_DASHBOARD_PORT:-9119}"
+  local dash_port="${HERMES_DASHBOARD_PORT:-9120}"
   if command -v ss >/dev/null 2>&1 \
     && ss -tln 2>/dev/null | grep -q "127.0.0.1:${dash_port} "; then
     printf 'WARN: port %s already in use on the host (network_mode: host).\n' "$dash_port" >&2

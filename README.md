@@ -58,12 +58,17 @@ source ~/.bashrc   # load keys into shell first
 hermes-assistant-wrapper.sh start
 hermes-assistant chat
 hermes-assistant-wrapper.sh status
-# Dashboard: http://127.0.0.1:9119
+# Dashboard: http://127.0.0.1:9120
 ```
 
 ## systemd
 
-One user unit — start/stop/restart the container. Loads `~/.hermes-assistant/.env` automatically.
+Two layouts, two units:
+
+- **Direct operator** (`bucephalus3` runs the container): `hermes-assistant-gateway.service` via `install-systemd-user.sh`.
+- **Dedicated `hermes` user**: `hermes-assistant.service` via `install-autostart.sh`. That path installs `/usr/local/sbin/hermes-assistant-privileged.sh` (root:root) and a narrow NOPASSWD sudoers rule pointing at it — not at a user-writable `scripts/` copy.
+
+Direct operator:
 
 ```bash
 bash ~/hermes-assistant/scripts/install-systemd-user.sh

@@ -1,12 +1,12 @@
 #!/bin/bash
-# Quick health check for the Hermes dashboard on localhost:9119.
+# Quick health check for the Hermes dashboard on localhost:9120.
 # Run as bucephalus3 or with sudo for hermes podman state.
 
 set -euo pipefail
 
 TARGET_USER="${HERMES_TARGET_USER:-hermes}"
 TARGET_UID="$(id -u "$TARGET_USER" 2>/dev/null || true)"
-PORT="${HERMES_DASHBOARD_PORT:-9119}"
+PORT="${HERMES_DASHBOARD_PORT:-9120}"
 
 echo "== Port ${PORT} =="
 if ss -tlnp 2>/dev/null | grep -q ":${PORT} "; then
