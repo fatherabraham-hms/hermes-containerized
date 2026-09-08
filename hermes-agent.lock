@@ -1,0 +1,13 @@
+# Pinned NousResearch/hermes-agent used as the Docker build context.
+# Python/Node installs inside the image use that commit's uv.lock and
+# package-lock.json (`uv sync --frozen`, npm lockfile). Do not vendor
+# .venv or node_modules in this kit.
+#
+# Refresh after pulling upstream:
+#   scripts/update-hermes-agent-pin.sh
+# Then: sudo bash scripts/prepare-build-context.sh && wrapper recreate
+
+HERMES_AGENT_REPO=https://github.com/nousresearch/hermes-agent
+HERMES_AGENT_VERSION=0.16.0
+HERMES_AGENT_COMMIT=5a0e0d35b94fefae4ff6463c24f53e348f4679e6
+HERMES_AGENT_REF=v2026.6.5-1066-g5a0e0d35b

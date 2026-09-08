@@ -1,0 +1,42 @@
+# Hermes Assistant — isolated whole-process deployment (Option C pattern)
+#
+# Required env (set by wrapper / launch-with-host-env.sh before compose):
+#   HERMES_DATA_DIR, HERMES_WORKSPACE_DIR, HERMES_BUILD_CONTEXT
+#   HERMES_UID, HERMES_GID
+#
+# Note: podman-compose 1.0.6 breaks nested ${VAR:-${HOME}/path} — use plain vars only.
+#
+# Workspace mounts under /opt/data/workspace (not /workspace) so the image's
+# stage2-hook chowns it on boot. A separate /workspace bind mount is NOT chowned
+# and is root:root in rootless podman — hermes cannot write there.
+#
+# Persistence: these are host binds (same contract as official hermes-agent
+# ~/.hermes:/opt/data). Rebuild/recreate replaces the container, not this data.
+# Do not `compose down -v` / `--volumes` — that would drop the image's anonymous
+# VOLUME ["/opt/data"] if a bind ever failed to attach (empty interpolation).
+
+services:
+  gateway:
+    build:
+      context: ${HERMES_BUILD_CONTEXT}
+      dockerfile: Dockerfile
+    image: hermes-assistant:latest
+    container_name: hermes-assistant
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      # No :U — under rootless Podman, :U chowns the bind to container root and
+      # leaves config.yaml as root:root 0600, so runtime user hermes cannot read
+      # it (verify-isolation grep fails; agent/dashboard also break). Ownership is
+      # handled by stage2-hook + fix-rootless-data-ownership.sh + post-start repair.
+      # Keep short-form binds: podman-compose 1.0.6 is unreliable with type: bind.
+      - ${HERMES_DATA_DIR}:/opt/data
+      - ${HERMES_WORKSPACE_DIR}:/opt/data/workspace
+    environment:
+      - HERMES_UID=${HERMES_UID}
+      - HERMES_GID=${HERMES_GID}
+      # Supervised dashboard in the same container (avoids a second stage2 chown pass).
+      - HERMES_DASHBOARD=1
+      - HERMES_DASHBOARD_HOST=127.0.0.1
+      - HERMES_DASHBOARD_PORT=${HERMES_DASHBOARD_PORT}
+    command: ["gateway", "run"]

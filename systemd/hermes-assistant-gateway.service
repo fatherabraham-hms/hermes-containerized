@@ -1,0 +1,27 @@
+[Unit]
+Description=Hermes Assistant (isolated Podman gateway)
+Documentation=file:///home/bucephalus3/hermes-assistant/README.md
+After=network-online.target
+Wants=network-online.target
+StartLimitBurst=3
+StartLimitIntervalSec=300
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=%h/hermes-assistant
+Environment=HERMES_SYSTEMD=1
+Environment=HERMES_ASSISTANT_ROOT=%h/hermes-assistant
+Environment=HERMES_SKIP_DATA_CHOWN=1
+Environment=HERMES_DASHBOARD_PORT=9120
+Environment=HERMES_DATA_DIR=%h/.hermes-assistant
+Environment=HERMES_WORKSPACE_DIR=%h/hermes-workspace
+Environment=HERMES_BUILD_CONTEXT=%h/0_Development/hermes-agent
+# Allowlisted names → values loaded from ~/.bashrc by the wrapper (bash -ic).
+ExecStart=/bin/bash -lc '%h/hermes-assistant/scripts/hermes-assistant-wrapper.sh start'
+ExecStop=/bin/bash -lc '%h/hermes-assistant/scripts/hermes-assistant-wrapper.sh stop'
+TimeoutStartSec=900
+TimeoutStopSec=120
+
+[Install]
+WantedBy=default.target
